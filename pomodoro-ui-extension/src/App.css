@@ -1,0 +1,261 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  background: #1a1a2e;
+  color: #eee;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px 20px;
+  gap: 16px;
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #e94560;
+}
+
+.connection-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 20px;
+  background: #16213e;
+}
+
+.connection-badge.online  { color: #4ade80; }
+.connection-badge.offline { color: #888; }
+
+.connection-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.connection-badge.online .connection-dot {
+  box-shadow: 0 0 6px #4ade80;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+.mode-tabs {
+  display: flex;
+  gap: 6px;
+}
+
+.tab {
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: none;
+  background: #16213e;
+  color: #aaa;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.tab.active {
+  background: #e94560;
+  color: #fff;
+}
+
+.mode-short .tab.active { background: #4ade80; color: #1a1a2e; }
+.mode-long  .tab.active { background: #60a5fa; color: #1a1a2e; }
+
+.timer-ring {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ring-bg {
+  fill: none;
+  stroke: #16213e;
+  stroke-width: 8;
+}
+
+.ring-progress {
+  fill: none;
+  stroke: #e94560;
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.5s ease, stroke 0.4s ease;
+}
+
+.mode-short .ring-progress { stroke: #4ade80; }
+.mode-long  .ring-progress { stroke: #60a5fa; }
+
+.time-display {
+  position: absolute;
+  font-size: 48px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  padding: 10px 28px;
+  border-radius: 24px;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.btn-primary {
+  background: #e94560;
+  color: #fff;
+  min-width: 90px;
+}
+
+.btn-secondary {
+  background: #16213e;
+  color: #aaa;
+}
+
+.status {
+  font-size: 13px;
+  color: #888;
+  height: 18px;
+}
+
+.blocked-section {
+  width: 100%;
+  max-width: 320px;
+  margin-top: 8px;
+}
+
+.blocked-toggle {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #16213e;
+  border: none;
+  border-radius: 8px;
+  color: #aaa;
+  font-size: 13px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.blocked-toggle:hover { color: #fff; }
+
+.chevron {
+  display: inline-block;
+  transition: transform 0.2s;
+  font-style: normal;
+}
+
+.chevron.open { transform: rotate(180deg); }
+
+.blocked-body {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.blocked-textarea {
+  width: 100%;
+  background: #16213e;
+  border: 1px solid #2a2a4a;
+  border-radius: 8px;
+  color: #eee;
+  font-family: ui-monospace, monospace;
+  font-size: 13px;
+  padding: 10px 12px;
+  resize: vertical;
+  outline: none;
+  line-height: 1.6;
+}
+
+.blocked-textarea:focus { border-color: #e94560; }
+
+.blocked-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.blocked-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.blocked-hint {
+  font-size: 11px;
+  color: #555;
+}
+
+.btn-save {
+  padding: 5px 14px;
+  border-radius: 16px;
+  border: 1px solid #2a2a4a;
+  background: #16213e;
+  color: #aaa;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-save:hover {
+  border-color: #e94560;
+  color: #fff;
+}
+
+.btn-save.saved {
+  background: #1a3a2a;
+  border-color: #4ade80;
+  color: #4ade80;
+  cursor: default;
+}

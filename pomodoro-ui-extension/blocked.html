@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Focus Mode</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: system-ui, sans-serif;
+        background: #1a1a2e;
+        color: #eee;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-font-smoothing: antialiased;
+      }
+      .card {
+        text-align: center;
+        max-width: 420px;
+        padding: 48px 32px;
+      }
+      .icon { font-size: 56px; margin-bottom: 24px; }
+      h1 { font-size: 28px; font-weight: 700; margin-bottom: 12px; color: #fff; }
+      p { font-size: 15px; color: #888; line-height: 1.6; margin-bottom: 8px; }
+      .site { color: #e94560; font-weight: 600; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="icon">🍅</div>
+      <h1>You're in Focus Mode</h1>
+      <p>You blocked <span class="site" id="site-name"></span> to stay focused.</p>
+      <p>Your Pomodoro timer is still running.</p>
+    </div>
+    <script src="blocked.js"></script>
+  </body>
+</html>
