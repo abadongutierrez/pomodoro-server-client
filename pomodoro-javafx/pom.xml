@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.4.4</version>
+    <relativePath/>
+  </parent>
+
+  <groupId>com.pomodoro</groupId>
+  <artifactId>pomodoro-javafx</artifactId>
+  <version>1.0.0</version>
+  <packaging>jar</packaging>
+
+  <properties>
+    <java.version>21</java.version>
+    <javafx.version>21.0.7</javafx.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <build>
+    <plugins>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
+        <configuration>
+          <source>21</source>
+          <target>21</target>
+          <release>21</release>
+        </configuration>
+      </plugin>
+
+      <!-- Creates executable fat jar; must NOT coexist with maven-shade-plugin -->
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <configuration>
+          <mainClass>com.pomodoro.javafx.PomodoroJavaFxApplication</mainClass>
+        </configuration>
+      </plugin>
+
+      <!-- Dev workflow: mvn javafx:run adds JavaFX to module path automatically -->
+      <plugin>
+        <groupId>org.openjfx</groupId>
+        <artifactId>javafx-maven-plugin</artifactId>
+        <version>0.0.8</version>
+        <configuration>
+          <!-- No module-info.java: plain class reference, not module-qualified -->
+          <mainClass>com.pomodoro.javafx.PomodoroJavaFxApplication</mainClass>
+          <options>
+            <option>--add-modules=javafx.controls,javafx.graphics,javafx.base</option>
+          </options>
+        </configuration>
+      </plugin>
+
+    </plugins>
+  </build>
+
+  <dependencies>
+    <!-- Spring Boot Web: embedded Tomcat + Spring MVC REST support -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+
+    <!-- JavaFX: no classifier needed; javafx-maven-plugin resolves native libs at runtime -->
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-controls</artifactId>
+      <version>${javafx.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-graphics</artifactId>
+      <version>${javafx.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-base</artifactId>
+      <version>${javafx.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>
