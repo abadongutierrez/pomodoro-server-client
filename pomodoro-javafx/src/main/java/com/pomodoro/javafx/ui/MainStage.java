@@ -1,21 +1,20 @@
 package com.pomodoro.javafx.ui;
 
-import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.layout.StackPane;
+import com.pomodoro.javafx.viewmodel.TimerViewModel;
 import javafx.stage.Stage;
 import org.springframework.stereotype.Component;
 
 @Component
 public class MainStage {
 
-    public void show(Stage primaryStage) {
-        Label label = new Label("Pomodoro JavaFX + Spring Boot");
-        StackPane root = new StackPane(label);
-        Scene scene = new Scene(root, 400, 300);
+    private final TimerViewModel vm;
 
-        primaryStage.setTitle("Pomodoro JavaFX");
-        primaryStage.setScene(scene);
-        primaryStage.show();
+    public MainStage(TimerViewModel vm) {
+        this.vm = vm;
+    }
+
+    public void show(Stage primaryStage) {
+        vm.initialize();
+        new MainWindow(vm, primaryStage).show();
     }
 }

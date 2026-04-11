@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import type { Mode, BlockingMessage, ServerTimerState } from './types'
+import type { Mode, BlockingMessage, ServerTimerState, ServerConfig } from './types'
 import { parseLines } from './blockingUtils'
 import { apiStart, apiPause, apiReset, apiSetMode, apiSaveBlockedSites, connectSSE } from './timerClient'
 import './App.css'
@@ -82,6 +82,9 @@ export default function App() {
         setBlockedSitesText(sites.join('\n'))
         chrome.storage.local.set({ blockedSites: sites })
         sendBlocking({ type: 'UPDATE_BLOCKING', sites })
+      },
+      (config: ServerConfig) => {
+        chrome.storage.local.set({ pomodoroConfig: config })
       },
       () => setServerOnline(false),
     )

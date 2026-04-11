@@ -16,3 +16,7 @@ export interface ServerTimerState {
   sessionId: string
   remaining: number
 }
+
+export interface ServerConfig {
+  restoreTabs: boolean
+}

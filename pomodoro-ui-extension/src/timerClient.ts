@@ -1,4 +1,4 @@
-import type { ServerTimerState } from './types'
+import type { ServerTimerState, ServerConfig } from './types'
 
 const SERVER_BASE = 'http://localhost:4000'
 
@@ -49,6 +49,7 @@ export async function apiSaveBlockedSites(sites: string[]): Promise<string[]> {
 export function connectSSE(
   onState: (state: ServerTimerState) => void,
   onSites: (sites: string[]) => void,
+  onConfig: (config: ServerConfig) => void,
   onOffline: () => void,
 ): () => void {
   let es: EventSource | null = null
@@ -70,6 +71,14 @@ export function connectSSE(
     es.addEventListener('blockedSitesUpdate', (e: MessageEvent) => {
       try {
         onSites(JSON.parse(e.data) as string[])
+      } catch {
+        // ignore malformed payloads
+      }
+    })
+
+    es.addEventListener('configUpdate', (e: MessageEvent) => {
+      try {
+        onConfig(JSON.parse(e.data) as ServerConfig)
       } catch {
         // ignore malformed payloads
       }

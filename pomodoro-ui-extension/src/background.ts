@@ -1,7 +1,8 @@
 import { buildDNRRules } from './blockingUtils'
 import type { BlockingMessage } from './types'
 
-const TIMER_PAGE = chrome.runtime.getURL('index.html')
+const TIMER_PAGE   = chrome.runtime.getURL('index.html')
+const BLOCKED_PAGE = chrome.runtime.getURL('blocked.html')
 
 chrome.action.onClicked.addListener(async () => {
   const [existing] = await chrome.tabs.query({ url: TIMER_PAGE })
@@ -44,6 +45,46 @@ chrome.runtime.onMessage.addListener(
   }
 )
 
+// ---------------------------------------------------------------------------
+// Tab URL registry
+// Saves the original URL of a tab before we redirect it to blocked.html so
+// stopBlocking() can navigate it back.
+// ---------------------------------------------------------------------------
+
+async function saveTabUrl(tabId: number, url: string) {
+  const { blockedTabUrls = {} } = await chrome.storage.local.get('blockedTabUrls') as {
+    blockedTabUrls?: Record<number, string>
+  }
+  blockedTabUrls[tabId] = url
+  await chrome.storage.local.set({ blockedTabUrls })
+}
+
+async function restoreBlockedTabs() {
+  const { blockedTabUrls = {} } = await chrome.storage.local.get('blockedTabUrls') as {
+    blockedTabUrls?: Record<number, string>
+  }
+  const allTabs = await chrome.tabs.query({})
+
+  for (const tab of allTabs) {
+    if (!tab.id || !tab.url?.startsWith(BLOCKED_PAGE)) continue
+
+    const savedUrl = blockedTabUrls[tab.id]
+    if (savedUrl) {
+      // Navigate back to the page the user was on before blocking started
+      await chrome.tabs.update(tab.id, { url: savedUrl })
+    } else {
+      // Tab was DNR-redirected mid-navigation — go back in history
+      await chrome.tabs.goBack(tab.id).catch(() => {})
+    }
+  }
+
+  await chrome.storage.local.remove('blockedTabUrls')
+}
+
+// ---------------------------------------------------------------------------
+// Blocking lifecycle
+// ---------------------------------------------------------------------------
+
 async function startBlocking() {
   const { blockedSites = [] } = await chrome.storage.local.get('blockedSites') as { blockedSites?: string[] }
   console.log('[pomodoro] startBlocking — sites from storage:', blockedSites)
@@ -53,25 +94,16 @@ async function startBlocking() {
   }
 
   const rules = buildDNRRules(blockedSites, chrome.runtime.id)
-  console.log('[pomodoro] startBlocking — DNR rules to install:', JSON.stringify(rules, null, 2))
 
   const existingRules = await chrome.declarativeNetRequest.getDynamicRules()
-  const existingIds = existingRules.map((r) => r.id)
-  console.log('[pomodoro] startBlocking — removing existing rule IDs:', existingIds)
-
   await chrome.declarativeNetRequest.updateDynamicRules({
-    removeRuleIds: existingIds,
+    removeRuleIds: existingRules.map((r) => r.id),
     addRules: rules,
   })
 
-  const installedRules = await chrome.declarativeNetRequest.getDynamicRules()
-  console.log('[pomodoro] startBlocking — installed rules after update:', JSON.stringify(installedRules, null, 2))
-
-  // Mark blocking as active before redirecting tabs so UPDATE_BLOCKING
-  // messages arriving concurrently see the correct state
   await chrome.storage.local.set({ isBlocking: true })
 
-  // Redirect any already-open tab on a blocked site
+  // Redirect already-open tabs that are on a blocked domain, saving their URLs first
   const blockedSet = new Set(blockedSites)
   const allTabs = await chrome.tabs.query({})
   console.log('[pomodoro] startBlocking — checking', allTabs.length, 'open tabs')
@@ -79,10 +111,10 @@ async function startBlocking() {
     if (!tab.id || !tab.url) continue
     try {
       const host = new URL(tab.url).hostname.replace(/^www\./, '')
-      console.log('[pomodoro] startBlocking — tab host:', host, '| blocked?', blockedSet.has(host))
       if (blockedSet.has(host)) {
+        await saveTabUrl(tab.id, tab.url)
         await chrome.tabs.update(tab.id, {
-          url: chrome.runtime.getURL(`blocked.html?site=${encodeURIComponent(host)}`),
+          url: `${BLOCKED_PAGE}?site=${encodeURIComponent(host)}`,
         })
       }
     } catch {
@@ -93,12 +125,21 @@ async function startBlocking() {
 
 async function stopBlocking() {
   const existingRules = await chrome.declarativeNetRequest.getDynamicRules()
-  const existingIds = existingRules.map((r) => r.id)
-  if (existingIds.length === 0) return
-  await chrome.declarativeNetRequest.updateDynamicRules({
-    removeRuleIds: existingIds,
-    addRules: [],
-  })
+  if (existingRules.length > 0) {
+    await chrome.declarativeNetRequest.updateDynamicRules({
+      removeRuleIds: existingRules.map((r) => r.id),
+      addRules: [],
+    })
+  }
+
+  const { pomodoroConfig } = await chrome.storage.local.get('pomodoroConfig') as {
+    pomodoroConfig?: { restoreTabs: boolean }
+  }
+  // Default to false when config is absent (server offline) — matches server default
+  if (pomodoroConfig?.restoreTabs ?? false) {
+    await restoreBlockedTabs()
+  }
+
   await chrome.storage.local.set({ isBlocking: false })
 }
 
@@ -107,9 +148,10 @@ async function updateBlocking(newSites: string[]) {
   if (!isBlocking) return
 
   const existingRules = await chrome.declarativeNetRequest.getDynamicRules()
-  const existingIds = existingRules.map((r) => r.id)
-  const rules = buildDNRRules(newSites, chrome.runtime.id)
-  await chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds: existingIds, addRules: rules })
+  await chrome.declarativeNetRequest.updateDynamicRules({
+    removeRuleIds: existingRules.map((r) => r.id),
+    addRules: buildDNRRules(newSites, chrome.runtime.id),
+  })
 
   const newSiteSet = new Set(newSites)
   const allTabs = await chrome.tabs.query({})
@@ -118,8 +160,9 @@ async function updateBlocking(newSites: string[]) {
     try {
       const host = new URL(tab.url).hostname.replace(/^www\./, '')
       if (newSiteSet.has(host)) {
+        await saveTabUrl(tab.id, tab.url)
         await chrome.tabs.update(tab.id, {
-          url: chrome.runtime.getURL(`blocked.html?site=${encodeURIComponent(host)}`),
+          url: `${BLOCKED_PAGE}?site=${encodeURIComponent(host)}`,
         })
       }
     } catch {

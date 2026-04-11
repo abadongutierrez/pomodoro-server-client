@@ -2,10 +2,12 @@ package com.pomodoro.javafx;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 // Must NOT extend javafx.application.Application — JavaFX launcher is
 // triggered after Spring context is ready via JavaFxLauncher.
 @SpringBootApplication
+@EnableScheduling
 public class PomodoroJavaFxApplication {
 
     public static void main(String[] args) {
