@@ -17,6 +17,16 @@ export function normalizeDomain(input: string): string | null {
   return s
 }
 
+// Returns true if host is a blocked domain or one of its subdomains,
+// mirroring the `||domain` urlFilter used by the DNR rules.
+export function isHostBlocked(host: string, blockedSet: Set<string>): boolean {
+  const h = host.toLowerCase().replace(/^www\./, '')
+  for (const domain of blockedSet) {
+    if (h === domain || h.endsWith(`.${domain}`)) return true
+  }
+  return false
+}
+
 export function buildDNRRules(
   domains: string[],
   extensionId: string,

@@ -1,4 +1,4 @@
-import { buildDNRRules } from './blockingUtils'
+import { buildDNRRules, isHostBlocked } from './blockingUtils'
 import type { BlockingMessage } from './types'
 
 const TIMER_PAGE   = chrome.runtime.getURL('index.html')
@@ -88,8 +88,13 @@ async function restoreBlockedTabs() {
 async function startBlocking() {
   const { blockedSites = [] } = await chrome.storage.local.get('blockedSites') as { blockedSites?: string[] }
   console.log('[pomodoro] startBlocking — sites from storage:', blockedSites)
+
+  // Mark the session active even with no sites, so sites added mid-session
+  // are applied by updateBlocking()
+  await chrome.storage.local.set({ isBlocking: true })
+
   if (blockedSites.length === 0) {
-    console.log('[pomodoro] startBlocking — no sites, aborting')
+    console.log('[pomodoro] startBlocking — no sites yet, waiting for updates')
     return
   }
 
@@ -101,8 +106,6 @@ async function startBlocking() {
     addRules: rules,
   })
 
-  await chrome.storage.local.set({ isBlocking: true })
-
   // Redirect already-open tabs that are on a blocked domain, saving their URLs first
   const blockedSet = new Set(blockedSites)
   const allTabs = await chrome.tabs.query({})
@@ -111,7 +114,7 @@ async function startBlocking() {
     if (!tab.id || !tab.url) continue
     try {
       const host = new URL(tab.url).hostname.replace(/^www\./, '')
-      if (blockedSet.has(host)) {
+      if (isHostBlocked(host, blockedSet)) {
         await saveTabUrl(tab.id, tab.url)
         await chrome.tabs.update(tab.id, {
           url: `${BLOCKED_PAGE}?site=${encodeURIComponent(host)}`,
@@ -159,7 +162,7 @@ async function updateBlocking(newSites: string[]) {
     if (!tab.id || !tab.url) continue
     try {
       const host = new URL(tab.url).hostname.replace(/^www\./, '')
-      if (newSiteSet.has(host)) {
+      if (isHostBlocked(host, newSiteSet)) {
         await saveTabUrl(tab.id, tab.url)
         await chrome.tabs.update(tab.id, {
           url: `${BLOCKED_PAGE}?site=${encodeURIComponent(host)}`,
